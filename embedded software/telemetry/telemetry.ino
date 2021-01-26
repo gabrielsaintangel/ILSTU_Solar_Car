@@ -98,9 +98,10 @@ void throwError(int errorType)
 
 
 
-void stopButtonPressed()
-{
-
+int checkStopButton(){
+  while(digitalRead(in1)<<7){
+    
+  }
 }
 
 // flashes the lights in a recognizable pattern in case of an error
@@ -114,17 +115,17 @@ void manageLights(unsigned char messageBuffer)
 void readCan()
 {
   canID = CAN.getCanId();  // get the ID from the read message
-    CAN.readMsgBuf(&len, messageBuffer); // then read the message and the length into memory
-    if (messageBuffer[1] == 0x55) { //check value
-      if (canID == receivingID) { // check lights
-        manageLights(messageBuffer); //this message has been deemed to be about either the brake lights or BMS lights, pass to manageLights
-      }
-      else {
-        Serial.print(canID, HEX);
-        Serial.print(" "); 
-        Serial.println((char*)messageBuffer);
-      }
+  CAN.readMsgBuf(&len, messageBuffer); // then read the message and the length into memory
+  if (messageBuffer[1] == 0x55) { //check value
+    if (canID == receivingID) { // check lights
+      manageLights(messageBuffer); //this message has been deemed to be about either the brake lights or BMS lights, pass to manageLights
     }
+    else {
+      Serial.print(canID, HEX);
+      Serial.print(" ");
+      Serial.println((char*)messageBuffer);
+    }
+  }
 }
 
 
@@ -132,11 +133,14 @@ void readCan()
 void loop() {
   if (checkCom)
   {
+    if(digitalRead(in1)<<7){ //stop button pressed
+      manageLights()
+    }
+    if (CAN_MSGAVAIL == CAN.checkReceive()) {
+      readCan();
+    }
     if (GPS.newNMEAreceived()) {
       Serial.write(GPS.read());
-    }
-    if (CAN_MSGAVAIL == CAN.checkReceive()){
-      readCan();
     }
 
   }
